@@ -22,7 +22,7 @@ def start_drawing(x, y):
     pen.goto(x, y)
     pen.pendown()
     actions.append(("penup", x, y))
-    actions.append(("pendown"))
+    actions.append("pendown")
 def draw(x, y):
     pen.goto(x, y)
     actions.append(("goto", x, y))

@@ -13,7 +13,7 @@ app.config['SESSION_PROTECTION'] = 'strong'
 # 如果你想使用Flask-SQLAlchemy，可以注释掉下面的代码，并取消注释下面的Flask-SQLAlchemy部分  
   
 def init_db():  
-    conn = sqlite3.connect('database.db')  
+    conn = sqlite3.connect('E:\\YNU\\5\Python\\syhPython\\PythonLearning\\零基础学Python\\Flask_example\\flask_db\\database.db')  
     cursor = conn.cursor()  
     cursor.execute('''  
     CREATE TABLE IF NOT EXISTS users (  
@@ -39,7 +39,7 @@ def login():
         username = request.form['username']  
         password = request.form['password']  
           
-        conn = sqlite3.connect('database.db')  
+        conn = sqlite3.connect('E:/YNU/5/Python/syhPython/PythonLearning/零基础学Python/Flask_example/flask_db/database.db')  
         cursor = conn.cursor()  
         cursor.execute('SELECT * FROM users WHERE username = ?', (username,))  
         user = cursor.fetchone()  

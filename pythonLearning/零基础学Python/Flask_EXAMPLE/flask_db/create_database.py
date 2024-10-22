@@ -2,7 +2,7 @@ import sqlite3
 from werkzeug.security import generate_password_hash  
   
 # 连接到SQLite数据库（如果数据库不存在，它将被创建）  
-conn = sqlite3.connect('database.db')  
+conn = sqlite3.connect('E:/YNU/5/Python/syhPython/PythonLearning/零基础学Python/Flask_example/flask_db/database.db')  
 cursor = conn.cursor()  
   
 # 创建用户表  

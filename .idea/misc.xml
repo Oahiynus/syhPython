@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="gisenv" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="flaskenv" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="gisenv" project-jdk-type="Python SDK" />
 </project>

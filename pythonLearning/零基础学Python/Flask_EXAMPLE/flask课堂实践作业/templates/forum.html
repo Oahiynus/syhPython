@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>论坛</title>
+</head>
+<body>
+    <h2>论坛</h2>
+    
+    <!-- 发帖表单 -->
+    <form method="POST" action="{{ url_for('forum') }}">
+        <textarea name="post_content" rows="3" cols="50" placeholder="写下你的帖子..."></textarea>
+        <br><br>
+        <button type="submit">发布帖子</button>
+    </form>
+    
+    <h3>所有帖子：</h3>
+    {% for post in posts %}
+        <div style="border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
+            <p><strong>{{ post['username'] }}</strong> 于 {{ post['created_at'] }} 发帖：</p>
+            <p>{{ post['content'] }}</p>
+            
+            <!-- 回复表单 -->
+            <form method="POST" action="{{ url_for('reply', post_id=post['id']) }}">
+                <textarea name="reply_content" rows="2" cols="50" placeholder="回复..."></textarea>
+                <br><br>
+                <button type="submit">回复</button>
+            </form>
+            
+            <h4>回复：</h4>
+            {% for reply in post['replies'] %}
+                <p><strong>{{ reply['username'] }}</strong> 于 {{ reply['created_at'] }} 回复：</p>
+                <p>{{ reply['content'] }}</p>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    
+</body>
+</html>

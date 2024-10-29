@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notebook</title>
+</head>
+<body>
+    <h2>Notebook</h2>
+    <form method="POST" action="{{ url_for('notebook') }}">
+        <textarea name="content" rows="3" cols="40" placeholder="输入您的笔记..."></textarea>
+        <br><br>
+        <button type="submit">添加笔记</button>
+    </form>
+
+    <h3>您的笔记：</h3>
+    <ul>
+        {% for note in notes %}
+            <li>{{ note }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{{ url_for('logout') }}">注销</a>
+</body>
+</html>

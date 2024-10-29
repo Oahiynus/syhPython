@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>关于</title>
+</head>
+<body>
+    <h2>关于页面</h2>
+    <p>欢迎, {{ username }}!</p>
+    <a href="{{ url_for('notebook') }}">查看笔记</a> <!-- 添加链接到 notebook 页面 -->
+    <br><br>
+    <a href="{{ url_for('logout') }}">注销</a>
+</body>
+</html>

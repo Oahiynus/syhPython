@@ -74,6 +74,7 @@
             <option value="vector">矢量底图</option>
             <option value="image">影像底图</option>
             <option value="terrain">地形渲染</option>
+            <option value="threeD">三维地形</option>
         </select>
 
         <label for="annotationToggle">注记图层:</label>
@@ -94,7 +95,7 @@
     <div id="map"></div>
 
     <!-- 数据来源标签 -->
-    <div id="dataAttribution">数据来源 © <a href="https://www.tianditu.gov.cn/" target="_blank" style="color: #37acff; text-decoration: none;">天地图</a></div>
+    <div id="dataAttribution">数据来源 © <a href="https://www.tianditu.gov.cn/" target="_blank" style="color: #3ef2ff; text-decoration: none;">天地图</a></div>
 </div>
 
 <script>
@@ -129,6 +130,18 @@
                 url: 'http://t0.tianditu.gov.cn/DataServer?T=ter_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
             }),
             visible: false
+        }),
+        threeD: new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=dem_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+            }),
+            visible: false
+        }),
+        threeDAnnotation: new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=cta_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+            }),
+            visible: false
         })
     };
 
@@ -155,6 +168,8 @@
             tianDiTuLayers.image,             // 影像底图
             tianDiTuLayers.imageAnnotation,   // 影像注记
             tianDiTuLayers.terrain,           // 地形渲染
+            tianDiTuLayers.threeD,            // 三维地形
+            tianDiTuLayers.threeDAnnotation,  // 三维地名
             geoServerLayer                    // GeoServer发布的图层
         ],
         view: new ol.View({
@@ -169,9 +184,11 @@
         tianDiTuLayers.vector.setVisible(false);
         tianDiTuLayers.image.setVisible(false);
         tianDiTuLayers.terrain.setVisible(false);
+        tianDiTuLayers.threeD.setVisible(false); // 隐藏三维地形
 
         tianDiTuLayers.vectorAnnotation.setVisible(false);
         tianDiTuLayers.imageAnnotation.setVisible(false);
+        tianDiTuLayers.threeDAnnotation.setVisible(false); // 隐藏三维地名
 
         tianDiTuLayers[selectedLayer].setVisible(true);
 
@@ -183,6 +200,9 @@
             document.getElementById('annotationToggle').checked = true;
         } else if (selectedLayer === 'terrain') {
             tianDiTuLayers.imageAnnotation.setVisible(true);
+            document.getElementById('annotationToggle').checked = true;
+        } else if (selectedLayer === 'threeD') {
+            tianDiTuLayers.threeDAnnotation.setVisible(true); // 三维地名默认显示
             document.getElementById('annotationToggle').checked = true;
         }
     }
@@ -199,6 +219,8 @@
             tianDiTuLayers.vectorAnnotation.setVisible(annotationVisible);
         } else if (tianDiTuLayers.image.getVisible() || tianDiTuLayers.terrain.getVisible()) {
             tianDiTuLayers.imageAnnotation.setVisible(annotationVisible);
+        } else if (tianDiTuLayers.threeD.getVisible()) {
+            tianDiTuLayers.threeDAnnotation.setVisible(annotationVisible);
         }
     });
 

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIS Web Map</title>
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css">
+    <style>
+        .ol-zoom {
+            top: 60px; /* 确保按钮位于工具栏下方 */
+        }
+
+        /* 父容器样式 */
+        #mapContainer {
+            width: 100%;
+            height: 100vh; /* 父容器占满屏幕高度 */
+            position: relative;
+        }
+
+        /* 地图容器的样式 */
+        #map {
+            width: 100%;
+            height: calc(100vh - 50px); /* 留出50px给工具栏 */
+        }
+
+        /* 工具栏样式 */
+        #toolbar {
+            position: absolute; /* 固定在父容器顶部 */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #333; /* 深色背景 */
+            color: white; /* 白色字体 */
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        /* 工具栏中的选择器样式 */
+        #toolbar label {
+            margin-right: 15px;
+            color: white;
+        }
+        #toolbar select, #toolbar input, #toolbar button {
+            margin-right: 15px;
+        }
+
+        /* 数据来源标签样式 */
+        #dataAttribution {
+            position: absolute;
+            bottom: 60px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #333;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+<!-- 父容器 -->
+<div id="mapContainer">
+    <!-- 工具栏 -->
+    <div id="toolbar">
+        <label for="layerSelect">主图层选择:</label>
+        <select id="layerSelect">
+            <option value="vector">矢量底图</option>
+            <option value="image">影像底图</option>
+            <option value="terrain">地形渲染</option>
+        </select>
+
+        <label for="annotationToggle">注记图层:</label>
+        <input type="checkbox" id="annotationToggle" checked>
+
+        <label for="drawType">绘制工具:</label>
+        <select id="drawType">
+            <option value="None">无</option>
+            <option value="Point">点</option>
+            <option value="LineString">线</option>
+            <option value="Polygon">多边形</option>
+        </select>
+
+        <button id="fullscreenToggle">全屏显示</button>
+    </div>
+
+    <!-- 地图容器 -->
+    <div id="map"></div>
+
+    <!-- 数据来源标签 -->
+    <div id="dataAttribution">数据来源 © <a href="https://www.tianditu.gov.cn/" target="_blank" style="color: #37acff; text-decoration: none;">天地图</a></div>
+</div>
+
+<script>
+    // 天地图图层定义
+    const tianDiTuLayers = {
+        vector: new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+            }),
+            visible: true
+        }),
+        vectorAnnotation: new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+            }),
+            visible: true
+        }),
+        image: new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+            }),
+            visible: false
+        }),
+        imageAnnotation: new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+            }),
+            visible: false
+        }),
+        terrain: new ol.layer.Tile({
+            source: new ol.source.XYZ({
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=ter_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+            }),
+            visible: false
+        })
+    };
+
+    // GeoServer服务图层
+    const geoServerLayer = new ol.layer.Tile({
+        source: new ol.source.TileWMS({
+            url: 'http://localhost:8080/geoserver/myworkspace/wms?service=WMS&version=1.1.0&request=GetMap&layers=myworkspace%3Ausa&bbox=-130.85168%2C20.7052%2C-62.0054%2C54.1141&width=768&height=372&srs=EPSG%3A4326&format=application/openlayers',
+            params: {'LAYERS': 'myworkspace:usa', 'TILED': true},
+            serverType: 'geoserver'
+        })
+    });
+
+    // 创建比例尺控件，位置在左下角
+    const scaleLineControl = new ol.control.ScaleLine({
+        units: 'metric' // 设置为公制单位
+    });
+
+    // 定义地图对象
+    const map = new ol.Map({
+        target: 'map',
+        layers: [
+            tianDiTuLayers.vector,            // 矢量底图
+            tianDiTuLayers.vectorAnnotation,  // 矢量注记
+            tianDiTuLayers.image,             // 影像底图
+            tianDiTuLayers.imageAnnotation,   // 影像注记
+            tianDiTuLayers.terrain,           // 地形渲染
+            geoServerLayer                    // GeoServer发布的图层
+        ],
+        view: new ol.View({
+            center: ol.proj.fromLonLat([104.06, 30.67]), // 初始中心点
+            zoom: 5
+        }),
+        controls: ol.control.defaults().extend([scaleLineControl]) // 添加比例尺控件
+    });
+
+    // 更新主图层和自动显示注记图层
+    function updateMainLayer(selectedLayer) {
+        tianDiTuLayers.vector.setVisible(false);
+        tianDiTuLayers.image.setVisible(false);
+        tianDiTuLayers.terrain.setVisible(false);
+
+        tianDiTuLayers.vectorAnnotation.setVisible(false);
+        tianDiTuLayers.imageAnnotation.setVisible(false);
+
+        tianDiTuLayers[selectedLayer].setVisible(true);
+
+        if (selectedLayer === 'vector') {
+            tianDiTuLayers.vectorAnnotation.setVisible(true);
+            document.getElementById('annotationToggle').checked = true;
+        } else if (selectedLayer === 'image') {
+            tianDiTuLayers.imageAnnotation.setVisible(true);
+            document.getElementById('annotationToggle').checked = true;
+        } else if (selectedLayer === 'terrain') {
+            tianDiTuLayers.imageAnnotation.setVisible(true);
+            document.getElementById('annotationToggle').checked = true;
+        }
+    }
+
+    // 图层选择功能
+    document.getElementById('layerSelect').addEventListener('change', function () {
+        updateMainLayer(this.value);
+    });
+
+    // 注记图层开关功能
+    document.getElementById('annotationToggle').addEventListener('change', function () {
+        const annotationVisible = this.checked;
+        if (tianDiTuLayers.vector.getVisible()) {
+            tianDiTuLayers.vectorAnnotation.setVisible(annotationVisible);
+        } else if (tianDiTuLayers.image.getVisible() || tianDiTuLayers.terrain.getVisible()) {
+            tianDiTuLayers.imageAnnotation.setVisible(annotationVisible);
+        }
+    });
+
+    // 矢量层和源，用于绘制用户图形
+    const drawSource = new ol.source.Vector({ wrapX: false });
+    const drawLayer = new ol.layer.Vector({
+        source: drawSource
+    });
+    map.addLayer(drawLayer);
+
+    // 添加绘制互动功能
+    let drawInteraction;
+    function addDrawInteraction(type) {
+        if (drawInteraction) {
+            map.removeInteraction(drawInteraction);
+        }
+        if (type !== 'None') {
+            drawInteraction = new ol.interaction.Draw({
+                source: drawSource,
+                type: type
+            });
+            map.addInteraction(drawInteraction);
+        }
+    }
+
+    // 监听绘制类型选择器的更改事件
+    document.getElementById('drawType').addEventListener('change', function () {
+        const drawType = this.value;
+        addDrawInteraction(drawType);
+    });
+
+    // 初始化显示矢量底图和矢量注记
+    updateMainLayer('vector');
+
+    // 全屏切换功能
+    const fullscreenToggleButton = document.getElementById('fullscreenToggle');
+    fullscreenToggleButton.addEventListener('click', function () {
+        if (!document.fullscreenElement) {
+            document.getElementById('mapContainer').requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    });
+
+    // 监听全屏退出
+    document.addEventListener('fullscreenchange', function () {
+        if (!document.fullscreenElement) {
+            fullscreenToggleButton.innerText = '全屏显示';
+        } else {
+            fullscreenToggleButton.innerText = '退出全屏';
+        }
+    });
+</script>
+
+</body>
+</html>

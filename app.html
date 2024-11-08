@@ -4,11 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GIS Web Map</title>
+    <!-- 加载 OpenLayers 库 -->
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css">
+    <!-- 加载 Cesium 库 -->
+    <script src="https://api.tianditu.gov.cn/cdn/demo/sanwei/static/cesium/Cesium.js"></script>
+    <script src="https://api.tianditu.gov.cn/cdn/plugins/cesium/Cesium_ext_min.js"></script>
+    <script src="https://api.tianditu.gov.cn/cdn/plugins/cesium/long.min.js"></script>
+    <script src="https://api.tianditu.gov.cn/cdn/plugins/cesium/bytebuffer.min.js"></script>
+    <script src="https://api.tianditu.gov.cn/cdn/plugins/cesium/protobuf.min.js"></script>
+    <link rel="stylesheet" href="https://api.tianditu.gov.cn/cdn/demo/sanwei/static/cesium/Widgets/widgets.css">
     <style>
         .ol-zoom {
             top: 60px; /* 确保按钮位于工具栏下方 */
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
         }
 
         /* 父容器样式 */
@@ -49,6 +62,9 @@
             margin-right: 15px;
         }
 
+        #cesiumContainer {
+            display: none; /* 初始状态下隐藏三维地图 */
+        }
         /* 数据来源标签样式 */
         #dataAttribution {
             position: absolute;
@@ -92,13 +108,23 @@
     </div>
 
     <!-- 地图容器 -->
+    <!-- 二维地图容器 -->
     <div id="map"></div>
+
+    <!-- 三维地图容器 -->
+    <div id="cesiumContainer"></div>
 
     <!-- 数据来源标签 -->
     <div id="dataAttribution">数据来源 © <a href="https://www.tianditu.gov.cn/" target="_blank" style="color: #3ef2ff; text-decoration: none;">天地图</a></div>
 </div>
 
 <script>
+    const token = '792daaef8085291feee90bee493823cc';
+    const tdtUrl = 'https://t{s}.tianditu.gov.cn/';
+    const subdomains = ['0', '1', '2', '3', '4', '5', '6', '7'];
+    let viewer;  // Cesium viewer
+
+    // 初始化二维 OpenLayers 地图
     // 天地图图层定义
     const tianDiTuLayers = {
         vector: new ol.layer.Tile({
@@ -163,7 +189,7 @@
     const map = new ol.Map({
         target: 'map',
         layers: [
-            tianDiTuLayers.vector,            // 矢量底图
+        tianDiTuLayers.vector,            // 矢量底图
             tianDiTuLayers.vectorAnnotation,  // 矢量注记
             tianDiTuLayers.image,             // 影像底图
             tianDiTuLayers.imageAnnotation,   // 影像注记
@@ -179,7 +205,85 @@
         controls: ol.control.defaults().extend([scaleLineControl]) // 添加比例尺控件
     });
 
-    // 更新主图层和自动显示注记图层
+    
+
+    // 函数：初始化三维 Cesium 地图
+    function initCesiumViewer() {
+        if (viewer) return; // 如果已初始化，则不再重新加载
+        viewer = new Cesium.Viewer('cesiumContainer', {
+            shouldAnimate: true,
+            baseLayerPicker: false,
+            fullscreenButton: false,
+            geocoder: false,
+            homeButton: false,
+            infoBox: false,
+            sceneModePicker: false,
+            timeline: false,
+            navigationHelpButton: false
+        });
+
+        // 加载影像图层
+        const imgMap = new Cesium.UrlTemplateImageryProvider({
+            url: tdtUrl + 'DataServer?T=img_w&x={x}&y={y}&l={z}&tk=' + token,
+            subdomains: subdomains,
+            tilingScheme: new Cesium.WebMercatorTilingScheme(),
+            maximumLevel: 18
+        });
+        viewer.imageryLayers.addImageryProvider(imgMap);
+
+        // 加载国界服务
+        const iboMap = new Cesium.UrlTemplateImageryProvider({
+            url: tdtUrl + 'DataServer?T=ibo_w&x={x}&y={y}&l={z}&tk=' + token,
+            subdomains: subdomains,
+            tilingScheme: new Cesium.WebMercatorTilingScheme(),
+            maximumLevel: 10
+        });
+        viewer.imageryLayers.addImageryProvider(iboMap);
+
+        // 加载三维地形
+        const terrainUrls = subdomains.map(subdomain => tdtUrl.replace('{s}', subdomain) + 'mapservice/swdx?T=elv_c&tk=' + token);
+        viewer.terrainProvider = new Cesium.GeoTerrainProvider({ urls: terrainUrls });
+
+        // 加载三维地名
+        const wtfs = new Cesium.GeoWTFS({
+            viewer,
+            subdomains: subdomains,
+            metadata: {
+                boundBox: { minX: -180, minY: -90, maxX: 180, maxY: 90 },
+                minLevel: 1,
+                maxLevel: 20
+            },
+            labelGraphics: { font: "28px sans-serif", fontSize: 28, fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.BLACK },
+            billboardGraphics: { width: 18, height: 18 }
+        });
+        wtfs.getTileUrl = () => tdtUrl + 'mapservice/GetTiles?lxys={z},{x},{y}&VERSION=1.0.0&tk=' + token;
+        wtfs.getIcoUrl = () => tdtUrl + 'mapservice/GetIcon?id={id}&tk=' + token;
+        wtfs.initTDT([]); // 传入必要的坐标信息
+    }
+    // 图层选择功能
+    // 切换二维和三维视图
+    document.getElementById('layerSelect').addEventListener('change', function () {
+        const selectedLayer = this.value;
+        if (selectedLayer === 'threeD') {
+            document.getElementById('map').style.display = 'none';
+            document.getElementById('cesiumContainer').style.display = 'block';
+            initCesiumViewer(); // 初始化三维地图
+            viewer.camera.flyTo({
+                destination: Cesium.Cartesian3.fromDegrees(103.84, 31.15, 17850000),
+                orientation: {
+                    heading :  Cesium.Math.toRadians(348.4202942851978),
+                    pitch : Cesium.Math.toRadians(-89.74026687972041),
+                    roll : Cesium.Math.toRadians(0)
+                }
+            });
+        } else {
+            document.getElementById('map').style.display = 'block';
+            document.getElementById('cesiumContainer').style.display = 'none';
+            updateMainLayer(selectedLayer); // 使用原有 updateMainLayer 函数更新二维图层
+        }
+    });
+
+    // 更新主图层和自动显示注记图层（二维地图）
     function updateMainLayer(selectedLayer) {
         tianDiTuLayers.vector.setVisible(false);
         tianDiTuLayers.image.setVisible(false);

@@ -22,6 +22,28 @@ def read(path_input):  # path_input 为矢量数据路径
     return count_fields, count_features
 
 
+def get_unique_field_values(path_input, field):
+    '''Retrieve unique values from a specified field.'''
+    
+    # 打开输入的 shapefile 文件
+    data_source = ogr.Open(path_input, 0)
+    
+    # 获取图层
+    layer = data_source.GetLayer()
+    
+    # 获取字段的唯一值
+    unique_values = set()
+    for feature in layer:
+        value = feature.GetField(field)
+        if value is not None:
+            unique_values.add(value)
+    
+    # 关闭数据源
+    data_source = None
+    
+    return list(unique_values)
+
+
 def vec_sel(path_input, path_output, field, field_values):  # path_input 为矢量数据路径, path_output 为输出路径, field 为字段, field_values 为字段值列表
     '''Feature selection by ogr with encoding support for multiple values.'''
     
@@ -85,6 +107,12 @@ print("要素数量:", count_features)
 
 # 获取字段名称
 field_name = "dt_name"  # 替换为实际字段名
+
+# 获取该字段下的所有唯一值，并显示给用户
+unique_values = get_unique_field_values(path_input, field_name)
+print(f"字段 '{field_name}' 包括：")
+print(", ".join(unique_values))
+
 # 从输入字段值，并将其处理为列表
 user_input = input("请输入要选取的字段值（若有多个值以顿号分隔）：")
 field_values = [value.strip() for value in user_input.split("、")]

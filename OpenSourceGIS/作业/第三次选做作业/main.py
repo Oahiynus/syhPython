@@ -83,8 +83,12 @@ count_fields, count_features = read(path_input)
 print("字段数量:", count_fields)
 print("要素数量:", count_features)
 
+# 获取字段名称
+field_name = "dt_name"  # 替换为实际字段名
+# 从输入字段值，并将其处理为列表
+user_input = input("请输入要选取的字段值（若有多个值以顿号分隔）：")
+field_values = [value.strip() for value in user_input.split("、")]
+
 # 根据字段值列表进行要素选取并保存到新文件
 path_output = 'E:/YNU/5/OpenSourceGIS/Assignment_3/data/output/kunming_feature.shp'  # 输出文件路径
-field_name = "dt_name"  # 替换为实际字段名
-field_values = ["安宁市", "五华区"]  # 替换为实际字段值列表
 vec_sel(path_input, path_output, field_name, field_values)

@@ -22,8 +22,8 @@ def read(path_input):  # path_input 为矢量数据路径
     return count_fields, count_features
 
 
-def get_unique_field_values(path_input, field):
-    '''Retrieve unique values from a specified field.'''
+def get_field_names(path_input):
+    '''Retrieve all field names from the shapefile.'''
     
     # 打开输入的 shapefile 文件
     data_source = ogr.Open(path_input, 0)
@@ -31,20 +31,39 @@ def get_unique_field_values(path_input, field):
     # 获取图层
     layer = data_source.GetLayer()
     
-    # 获取字段的唯一值
-    unique_values = set()
-    for feature in layer:
-        value = feature.GetField(field)
-        if value is not None:
-            unique_values.add(value)
+    # 获取字段名列表
+    layer_defn = layer.GetLayerDefn()
+    field_names = [layer_defn.GetFieldDefn(i).GetName() for i in range(layer_defn.GetFieldCount())]
     
     # 关闭数据源
     data_source = None
     
-    return list(unique_values)
+    return field_names
 
 
-def vec_sel(path_input, path_output, field, field_values):  # path_input 为矢量数据路径, path_output 为输出路径, field 为字段, field_values 为字段值列表
+def get_unique_field_values(path_input, field):
+    '''Retrieve unique values from a specified field, maintaining original order.'''
+    
+    # 打开输入的 shapefile 文件
+    data_source = ogr.Open(path_input, 0)
+    
+    # 获取图层
+    layer = data_source.GetLayer()
+    
+    # 使用列表来保持字段值的插入顺序
+    unique_values = []
+    for feature in layer:
+        value = feature.GetField(field)
+        if value is not None and value not in unique_values:
+            unique_values.append(value)  # 如果值未在列表中，则添加
+    
+    # 关闭数据源
+    data_source = None
+    
+    return unique_values
+
+
+def vec_sel(path_input, path_output, filter_expressions):  # filter_expressions 为包含字段和字段值的筛选表达式列表
     '''Feature selection by ogr with encoding support for multiple values.'''
     
     # 打开输入的 shapefile 文件
@@ -72,8 +91,8 @@ def vec_sel(path_input, path_output, field, field_values):  # path_input 为矢�
         field_defn = layer_defn.GetFieldDefn(i)
         layer_out.CreateField(field_defn)
     
-    # 设置字段过滤条件，根据 field 和 field_values 列表进行筛选
-    filter_expression = " OR ".join([f"{field} = '{value}'" for value in field_values])
+    # 合并所有筛选条件
+    filter_expression = " AND ".join(filter_expressions)
     layer.SetAttributeFilter(filter_expression)
     print(f"筛选条件: {filter_expression}")
     
@@ -105,18 +124,33 @@ count_fields, count_features = read(path_input)
 print("字段数量:", count_fields)
 print("要素数量:", count_features)
 
-# 获取字段名称
-field_name = "dt_name"  # 替换为实际字段名
+# 设置筛选表达式列表
+filter_expressions = []
 
-# 获取该字段下的所有唯一值，并显示给用户
-unique_values = get_unique_field_values(path_input, field_name)
-print(f"字段 '{field_name}' 包括：")
-print(", ".join(unique_values))
-
-# 从输入字段值，并将其处理为列表
-user_input = input("请输入要选取的字段值（若有多个值以顿号分隔）：")
-field_values = [value.strip() for value in user_input.split("、")]
+while True:
+    # 显示所有字段名供用户选择
+    field_names = get_field_names(path_input)
+    print("可选字段名：", ", ".join(field_names))
+    field_name = input("请输入要选择的字段名：")
+    
+    # 获取该字段下的所有唯一值，并显示给用户
+    unique_values = get_unique_field_values(path_input, field_name)
+    print(f"字段 '{field_name}' 的唯一值列表：")
+    print("、".join(unique_values))
+    
+    # 从输入字段值，并将其处理为列表
+    user_input = input("请输入要选取的字段值（若有多个值以顿号分隔）：")
+    field_values = [value.strip() for value in user_input.split("、")]
+    
+    # 创建筛选表达式
+    expression = " OR ".join([f"{field_name} = '{value}'" for value in field_values])
+    filter_expressions.append(f"({expression})")
+    
+    # 询问用户是否要继续选择其他字段
+    continue_choice = input("是否继续选择其他字段？(是/否)：")
+    if continue_choice.lower() != "是":
+        break
 
 # 根据字段值列表进行要素选取并保存到新文件
 path_output = 'E:/YNU/5/OpenSourceGIS/Assignment_3/data/output/kunming_feature.shp'  # 输出文件路径
-vec_sel(path_input, path_output, field_name, field_values)
+vec_sel(path_input, path_output, filter_expressions)

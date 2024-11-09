@@ -1,8 +1,5 @@
 from osgeo import ogr, osr, gdal
 
-# 设置输出编码为 UTF-8
-gdal.SetConfigOption('SHAPE_ENCODING', 'UTF-8')
-
 def read(path_input):  # path_input 为矢量数据路径
     '''Vector reading by ogr.'''
     
@@ -25,8 +22,8 @@ def read(path_input):  # path_input 为矢量数据路径
     return count_fields, count_features
 
 
-def vec_sel(path_input, path_output, field, field_value):  # path_input 为矢量数据路径, path_output 为输出路径, field 为字段, field_value 为字段值
-    '''Feature selection by ogr with encoding support.'''
+def vec_sel(path_input, path_output, field, field_values):  # path_input 为矢量数据路径, path_output 为输出路径, field 为字段, field_values 为字段值列表
+    '''Feature selection by ogr with encoding support for multiple values.'''
     
     # 打开输入的 shapefile 文件
     data_source = ogr.Open(path_input, 0) # 0 表示以只读方式打开, 1 表示以读写方式打开
@@ -42,20 +39,19 @@ def vec_sel(path_input, path_output, field, field_value):  # path_input 为矢�
 
     # 创建图层定义，用于定义输出图层的结构
     layer_out = data_source_out.CreateLayer("selected_features", 
-                                   geom_type = layer.GetGeomType(), 
-                                   srs = layer.GetSpatialRef() 
-                                   ) ##创建图层，定义成一个面,空间参考与读入数据一致
+                                            geom_type=layer.GetGeomType(), 
+                                            srs=layer.GetSpatialRef(), 
+                                            options=['ENCODING=UTF-8']
+                                            )  # 保持空间参考和编码系统一致
     
     # 复制字段定义到输出图层
     layer_defn = layer.GetLayerDefn()
-
-    # 写入每个字段特定信息
     for i in range(layer_defn.GetFieldCount()):
         field_defn = layer_defn.GetFieldDefn(i)
         layer_out.CreateField(field_defn)
     
-    # 设置字段过滤条件，根据 field 和 field_value 进行筛选
-    filter_expression = f"{field} = '{field_value}'"
+    # 设置字段过滤条件，根据 field 和 field_values 列表进行筛选
+    filter_expression = " OR ".join([f"{field} = '{value}'" for value in field_values])
     layer.SetAttributeFilter(filter_expression)
     print(f"筛选条件: {filter_expression}")
     
@@ -71,9 +67,8 @@ def vec_sel(path_input, path_output, field, field_value):  # path_input 为矢�
         layer_out.CreateFeature(feature.Clone())
     
     # 创建 .cpg 文件，指定为 UTF-8 编码
-    with open(path_output.replace('.shp', '.cpg'), 
-              'w', 
-              encoding='utf-8') as cpg_file: cpg_file.write('UTF-8')
+    with open(path_output.replace('.shp', '.cpg'), 'w', encoding='utf-8') as cpg_file:
+        cpg_file.write('UTF-8')
 
     # 清理并关闭文件
     layer.SetAttributeFilter(None)  # 清除过滤条件
@@ -88,8 +83,8 @@ count_fields, count_features = read(path_input)
 print("字段数量:", count_fields)
 print("要素数量:", count_features)
 
-# 根据字段值进行要素选取并保存到新文件
+# 根据字段值列表进行要素选取并保存到新文件
 path_output = 'E:/YNU/5/OpenSourceGIS/Assignment_3/data/output/kunming_feature.shp'  # 输出文件路径
 field_name = "dt_name"  # 替换为实际字段名
-field_value = "安宁市"  # 替换为实际字段值
-vec_sel(path_input, path_output, field_name, field_value)
+field_values = ["安宁市", "五华区"]  # 替换为实际字段值列表
+vec_sel(path_input, path_output, field_name, field_values)

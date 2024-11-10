@@ -1,4 +1,4 @@
-from osgeo import ogr, osr, gdal
+from osgeo import ogr
 
 def read(path_input):  # path_input 为矢量数据路径
     '''Vector reading by ogr.'''
@@ -63,7 +63,7 @@ def get_unique_field_values(path_input, field):
     return unique_values
 
 
-def vec_sel(path_input, path_output, filter_expressions):  # filter_expressions 为包含字段和字段值的筛选表达式列表
+def vec_sel(path_input, path_output, final_filter_expression):  # filter_expression 为最终的筛选表达式
     '''Feature selection by ogr with encoding support for multiple values.'''
     
     # 打开输入的 shapefile 文件
@@ -91,10 +91,9 @@ def vec_sel(path_input, path_output, filter_expressions):  # filter_expressions 
         field_defn = layer_defn.GetFieldDefn(i)
         layer_out.CreateField(field_defn)
     
-    # 合并所有筛选条件
-    filter_expression = " AND ".join(filter_expressions)
-    layer.SetAttributeFilter(filter_expression)
-    print(f"筛选条件: {filter_expression}")
+    # 应用筛选条件
+    layer.SetAttributeFilter(final_filter_expression)
+    print(f"筛选条件: {final_filter_expression}")
     
     # 检查筛选后的要素数量
     selected_feature_count = layer.GetFeatureCount()
@@ -124,7 +123,7 @@ count_fields, count_features = read(path_input)
 print("字段数量:", count_fields)
 print("要素数量:", count_features)
 
-# 设置筛选表达式列表
+# 设置筛选表达式
 filter_expressions = []
 
 while True:
@@ -142,7 +141,7 @@ while True:
     user_input = input("请输入要选取的字段值（若有多个值以顿号分隔）：")
     field_values = [value.strip() for value in user_input.split("、")]
     
-    # 创建筛选表达式
+    # 创建筛选表达式，并添加到筛选表达式列表中
     expression = " OR ".join([f"{field_name} = '{value}'" for value in field_values])
     filter_expressions.append(f"({expression})")
     
@@ -151,6 +150,9 @@ while True:
     if continue_choice.lower() != "是":
         break
 
+# 将所有筛选条件用 " OR " 连接
+final_filter_expression = " OR ".join(filter_expressions)
+
 # 根据字段值列表进行要素选取并保存到新文件
 path_output = 'E:/YNU/5/OpenSourceGIS/Assignment_3/data/output/kunming_feature.shp'  # 输出文件路径
-vec_sel(path_input, path_output, filter_expressions)
+vec_sel(path_input, path_output, final_filter_expression)

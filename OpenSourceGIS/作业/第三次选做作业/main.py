@@ -141,7 +141,7 @@ while True:
 
     # 询问用户是否继续选择其他字段
     continue_choice = input("是否继续选择其他字段？（是/否）：")
-    if continue_choice.lower() != "是":  # 若用户选择 "否"，则退出循环
+    if continue_choice.lower() == "否":  # 若用户选择 "否"，则退出循环
         break
 
 # 生成最终的筛选表达式，若有多个条件则使用最后一个条件

@@ -266,7 +266,7 @@
 
     // 叠加影像服务
     var imgMap = new Cesium.UrlTemplateImageryProvider({
-        url: tdtUrl + 'DataServer?T=img_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc',
+        url: tdtUrl + 'DataServer?T=img_w&x={x}&y={y}&l={z}&tk=' + token,
         subdomains: subdomains,
         tilingScheme : new Cesium.WebMercatorTilingScheme(),
         maximumLevel : 18
@@ -275,7 +275,7 @@
 
     // 叠加国界服务
     var iboMap = new Cesium.UrlTemplateImageryProvider({
-        url: tdtUrl + 'DataServer?T=ibo_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc',
+        url: tdtUrl + 'DataServer?T=ibo_w&x={x}&y={y}&l={z}&tk=' + token,
         subdomains: subdomains,
         tilingScheme : new Cesium.WebMercatorTilingScheme(),
         maximumLevel : 10
@@ -286,7 +286,7 @@
     var terrainUrls = new Array();
 
     for (var i = 0; i < subdomains.length; i++){
-        var url = tdtUrl.replace('{s}', subdomains[i]) + 'mapservice/swdx?T=elv_c&tk=792daaef8085291feee90bee493823cc';
+        var url = tdtUrl.replace('{s}', subdomains[i]) + 'mapservice/swdx?T=elv_c&tk=' + token;
         terrainUrls.push(url);
     }
 

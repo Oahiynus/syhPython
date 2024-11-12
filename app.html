@@ -27,14 +27,14 @@
         /* 父容器样式 */
         #mapContainer {
             width: 100%;
-            height: 100vh; /* 父容器占满屏幕高度 */
+            height: 107vh; /* 父容器占满屏幕高度 */
             position: relative;
         }
 
         /* 地图容器的样式 */
         #map {
             width: 100%;
-            height: calc(100vh - 50px); /* 留出50px给工具栏 */
+            height: calc(107vh - 50px); /* 留出50px给工具栏 */
         }
 
         /* 工具栏样式 */
@@ -58,7 +58,7 @@
             margin-right: 15px;
             color: white;
         }
-        #toolbar select, #toolbar input, #toolbar button {
+        #toolbar label, #toolbar select, #toolbar input, #toolbar button {
             margin-right: 15px;
         }
 
@@ -76,6 +76,15 @@
             color: #333;
             border-radius: 5px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .measurement-label {
+            background-color: white;
+            color: black;
+            padding: 2px 4px;
+            border: 1px solid black;
+            border-radius: 3px;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -474,6 +483,32 @@
     let selectInteraction = new ol.interaction.Select(); // 选择交互
     map.addInteraction(selectInteraction); // 添加选择交互，但默认不启用
 
+    function formatLength(line) {
+        const length = ol.sphere.getLength(line);
+        return length > 1000
+            ? (length / 1000).toFixed(2) + ' km'
+            : length.toFixed(2) + ' m';
+    }
+
+    function formatArea(polygon) {
+        const area = ol.sphere.getArea(polygon);
+        return area > 10000
+            ? (area / 1000000).toFixed(2) + ' km²'
+            : area.toFixed(2) + ' m²';
+    }
+
+    function addMeasureOverlay(coordinate, text) {
+        const overlay = new ol.Overlay({
+            element: document.createElement('div'),
+            position: coordinate,
+            positioning: 'center-left',
+            offset: [5, 5]
+        });
+        overlay.getElement().className = 'measurement-label';
+        overlay.getElement().textContent = text;
+        map.addOverlay(overlay);
+    }
+
     // 绘制和删除功能
     function updateInteraction(type) {
         if (drawInteraction) {
@@ -488,6 +523,7 @@
                 const selectedFeatures = selectInteraction.getFeatures();
                 selectedFeatures.forEach(feature => {
                     drawSource.removeFeature(feature); // 从源中移除选中的图形
+                    map.removeOverlay(feature.get('overlay')); // 从地图中移除选中的图形的测量标签
                 });
                 selectedFeatures.clear(); // 清除选择集
             });
@@ -501,6 +537,19 @@
                     source: drawSource,
                     type: type
                 });
+                drawInteraction.on('drawend', function (event) {
+                    const feature = event.feature;
+                    const geometry = feature.getGeometry();
+                    let measurementText;
+                    if (geometry instanceof ol.geom.LineString) {
+                        measurementText = formatLength(geometry);
+                    } else if (geometry instanceof ol.geom.Polygon) {
+                        measurementText = formatArea(geometry);
+                    }
+                    if (measurementText) {
+                        addMeasureOverlay(geometry.getLastCoordinate(), measurementText);
+                    }
+                });
                 map.addInteraction(drawInteraction);
             }
         }
@@ -508,9 +557,11 @@
 
     // 监听绘制类型选择器的更改事件
     document.getElementById('drawType').addEventListener('change', function () {
-        const drawType = this.value;
-        updateInteraction(drawType);
+        updateInteraction(this.value);
     });
+
+    // Initial map setup
+    updateInteraction('None');
 
     // 初始化显示矢量底图和矢量注记
     updateMainLayer('vector');

@@ -102,6 +102,7 @@
             <option value="Point">点</option>
             <option value="LineString">线</option>
             <option value="Polygon">多边形</option>
+            <option value="Delete">删除图形</option>
         </select>
 
         <button id="fullscreenToggle">全屏显示</button>
@@ -461,31 +462,54 @@
     });
 
     // 矢量层和源，用于绘制用户图形
+    // 地图和绘制的源和图层初始化
     const drawSource = new ol.source.Vector({ wrapX: false });
     const drawLayer = new ol.layer.Vector({
         source: drawSource
     });
     map.addLayer(drawLayer);
-
+    
     // 添加绘制互动功能
     let drawInteraction;
-    function addDrawInteraction(type) {
+    let selectInteraction = new ol.interaction.Select(); // 选择交互
+    map.addInteraction(selectInteraction); // 添加选择交互，但默认不启用
+
+    // 绘制和删除功能
+    function updateInteraction(type) {
         if (drawInteraction) {
             map.removeInteraction(drawInteraction);
         }
-        if (type !== 'None') {
-            drawInteraction = new ol.interaction.Draw({
-                source: drawSource,
-                type: type
+        selectInteraction.getFeatures().clear(); // 清除选择集
+
+        if (type === 'Delete') {
+            // 启用选择模式，用于选择要删除的图形
+            map.addInteraction(selectInteraction);
+            selectInteraction.on('select', function () {
+                const selectedFeatures = selectInteraction.getFeatures();
+                selectedFeatures.forEach(feature => {
+                    drawSource.removeFeature(feature); // 从源中移除选中的图形
+                });
+                selectedFeatures.clear(); // 清除选择集
             });
-            map.addInteraction(drawInteraction);
+        } else {
+            // 取消选择交互以避免干扰
+            map.removeInteraction(selectInteraction);
+
+            if (type !== 'None') {
+                // 添加绘制交互
+                drawInteraction = new ol.interaction.Draw({
+                    source: drawSource,
+                    type: type
+                });
+                map.addInteraction(drawInteraction);
+            }
         }
     }
 
     // 监听绘制类型选择器的更改事件
     document.getElementById('drawType').addEventListener('change', function () {
         const drawType = this.value;
-        addDrawInteraction(drawType);
+        updateInteraction(drawType);
     });
 
     // 初始化显示矢量底图和矢量注记

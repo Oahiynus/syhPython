@@ -1,3 +1,6 @@
 # 这是什么东西
 # 这个东西能干什么
 # 请给我三个例子
+
+git config --global user.name "syh"
+git config --global user.email "syh@163.com"

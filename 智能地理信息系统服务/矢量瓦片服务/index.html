@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【加载数据】pbf矢量瓦片渲染</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css"> 
+    <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script> 
+    <style>
+        #map {
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script>
+        // 定义样式
+        const style_simple = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: '#transparent' // 填充色为透明
+        }),
+        stroke: new ol.style.Stroke({
+            color: '#019fa0', // 边界颜色
+            width: 1 // 边界宽度：1px
+        })
+        });
+
+        // 样式函数
+        function simpleStyle(feature) {
+        return style_simple;
+        }
+
+        // 定义变量
+        const layer = 'vectortile:CN_county';
+        const projection_epsg_no = '4326';
+
+        // 创建地图
+        const map = new ol.Map({
+        target: 'map',
+        view: new ol.View({
+            center: ol.proj.fromLonLat([105.5, 35.5]), // 设置地图中心
+            zoom: 4.5, // 设置初始缩放级别
+            projection: 'EPSG:' + projection_epsg_no
+        }),
+        layers: [
+            new ol.layer.VectorTile({
+            style: simpleStyle, // 使用样式函数
+            source: new ol.source.VectorTile({
+                tilePixelRatio: 1, // 瓦片像素比
+                tileGrid: ol.tilegrid.createXYZ({ maxZoom: 19 }), // 定义瓦片网格，最大缩放级别为 19
+                format: new ol.format.MVT(), // 使用 MVT 矢量切片格式
+                url: 'http://localhost:8080/geoserver/gwc/service/tms/1.0.0/' + layer +
+                '@EPSG%3A' + projection_epsg_no + '@pbf/{z}/{x}/{-y}.pbf' // 动态生成 URL
+            })
+            })
+        ]
+        });
+  </script>
+</body>
+
+</html>

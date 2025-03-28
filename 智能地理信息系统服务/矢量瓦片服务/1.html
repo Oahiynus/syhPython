@@ -1,0 +1,52 @@
+<!DOCTYPE html>  
+<html lang="en">  
+  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>【加载数据】pbf矢量瓦片渲染</title>  
+    <link rel="stylesheet" href="./ol.css"> <!-- 确保路径正确 -->  
+    <script src="./ol.js"></script> <!-- 确保路径正确 -->  
+    <style>  
+        #map {  
+            width: 100vw;  
+            height: 100vh;  
+        }  
+    </style>  
+</head>  
+  
+<body>  
+    <div id="map"></div>  
+  
+    <script>  
+        // 创建地图  
+        const map = new ol.Map({  
+            target: 'map',  
+            view: new ol.View({  
+                center: ol.proj.fromLonLat([105.5, 35.5]), // 设置地图中心  
+                zoom: 4.5,  
+                projection: 'EPSG:900913', // 使用横轴墨卡托投影  
+            }),  
+            layers: [  
+                new ol.layer.VectorTile({  
+                    source: new ol.source.VectorTile({  
+                        url: "http://localhost:8080/geoserver/gwc/service/tms/1.0.0/vectortile%3ACN_county@EPSG%3A4326@pbf" + "/{z}/{x}/{-y}.pbf",    //确保路径正确
+                        url: "http://localhost:8080/geoserver/gwc/service/tms/1.0.0/vectortile%3ACN_county@EPSG%3A900913@pbf" + "/{z}/{x}/{-y}.pbf",    //确保路径正确  
+                        format: new ol.format.MVT(), // 矢量切片格式  
+                    }),  
+                    style: new ol.style.Style({  
+                        fill: new ol.style.Fill({  
+                            color: "transparent", // 填充色为透明  transparent
+                        }),  
+                        stroke: new ol.style.Stroke({  
+                            color: "#019fa0", // 边界颜色  
+                            width: 1,  
+                        }),  
+                    }),  
+                }),  
+            ],  
+        });  
+    </script>  
+</body>  
+  
+</html>  

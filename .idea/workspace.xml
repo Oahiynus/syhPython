@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9395778e-7e5f-4f2e-8101-905bfd1e7dc6" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/syhPython.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/syhPython.iml" afterDir="false" />
-    </list>
+    <list default="true" id="9395778e-7e5f-4f2e-8101-905bfd1e7dc6" name="更改" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -52,7 +49,7 @@
     "RunOnceActivity.OpenDjangoStructureViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "E:/anaconda3/Scripts/conda.exe",
+    "last_opened_file_path": "E:/YNU/5/PythonDataProcessingAnalysis/test_2/WeatherSpider",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -109,6 +106,7 @@
       <workItem from="1730803131304" duration="43000" />
       <workItem from="1730803182195" duration="629000" />
       <workItem from="1730805643434" duration="73000" />
+      <workItem from="1735201353226" duration="31000" />
     </task>
     <servers />
   </component>

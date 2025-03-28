@@ -16,7 +16,7 @@
     <link rel="stylesheet" href="https://api.tianditu.gov.cn/cdn/demo/sanwei/static/cesium/Widgets/widgets.css">
     <style>
         .ol-zoom {
-            top: 60px; /* 确保按钮位于工具栏下方 */
+            top: 60px;      /* 按钮位于工具栏下方 */
         }
         html, body {
             margin: 0;
@@ -27,7 +27,7 @@
         /* 父容器样式 */
         #mapContainer {
             width: 100%;
-            height: 107vh; /* 父容器占满屏幕高度 */
+            height: 107vh;  /* 父容器占满屏幕高度 */
             position: relative;
         }
 
@@ -130,7 +130,6 @@
 
 <script>
     const token = '792daaef8085291feee90bee493823cc';
-    const tdtUrl = 'https://t{s}.tianditu.gov.cn/';
     const subdomains = ['0', '1', '2', '3', '4', '5', '6', '7'];
     let viewer;  // Cesium viewer
 
@@ -139,43 +138,43 @@
     const tianDiTuLayers = {
         vector: new ol.layer.Tile({
             source: new ol.source.XYZ({
-                url: 'http://t0.tianditu.gov.cn/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=' + token,
             }),
             visible: true
         }),
         vectorAnnotation: new ol.layer.Tile({
             source: new ol.source.XYZ({
-                url: 'http://t0.tianditu.gov.cn/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=' + token,
             }),
             visible: true
         }),
         image: new ol.layer.Tile({
             source: new ol.source.XYZ({
-                url: 'http://t0.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=' + token,
             }),
             visible: false
         }),
         imageAnnotation: new ol.layer.Tile({
             source: new ol.source.XYZ({
-                url: 'http://t0.tianditu.gov.cn/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=' + token,
             }),
             visible: false
         }),
         terrain: new ol.layer.Tile({
             source: new ol.source.XYZ({
-                url: 'http://t0.tianditu.gov.cn/DataServer?T=ter_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=ter_w&x={x}&y={y}&l={z}&tk=' + token,
             }),
             visible: false
         }),
         threeD: new ol.layer.Tile({
             source: new ol.source.XYZ({
-                url: 'http://t0.tianditu.gov.cn/DataServer?T=dem_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=dem_w&x={x}&y={y}&l={z}&tk=' + token,
             }),
             visible: false
         }),
         threeDAnnotation: new ol.layer.Tile({
             source: new ol.source.XYZ({
-                url: 'http://t0.tianditu.gov.cn/DataServer?T=cta_w&x={x}&y={y}&l={z}&tk=792daaef8085291feee90bee493823cc'
+                url: 'http://t0.tianditu.gov.cn/DataServer?T=cta_w&x={x}&y={y}&l={z}&tk=' + token,
             }),
             visible: false
         })
@@ -215,7 +214,6 @@
         controls: ol.control.defaults().extend([scaleLineControl]) // 添加比例尺控件
     });
 
-    
 
     // 函数：初始化三维 Cesium 地图
     function initCesiumViewer() {
@@ -223,6 +221,7 @@
         var token = '792daaef8085291feee90bee493823cc';
     // 服务域名
     var tdtUrl = 'https://t{s}.tianditu.gov.cn/';
+    
     // 服务负载子域
     var subdomains=['0','1','2','3','4','5','6','7'];
 
